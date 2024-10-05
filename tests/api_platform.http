@@ -1,0 +1,14 @@
+### check if API Platform is running
+GET http://localhost:8081/api
+Accept: application/json
+
+### Upload test image
+POST http://localhost:8081/api/invoice
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="PXL_20240927_221744758.jpg"
+Content-Type: application/json
+
+< ./PXL_20240927_221744758.jpg
+--WebAppBoundary--
