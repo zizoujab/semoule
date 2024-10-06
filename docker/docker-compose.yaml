@@ -39,7 +39,7 @@ services:
     ports:
       - "8000:5000"
   svelte:
-    image: node:18-alpine  # Use Node.js to build and serve Svelte backend
+    image: node:18-alpine  # Use Node.js to build and serve Svelte app
     working_dir: /app
     volumes:
       - ../frontend:/app
