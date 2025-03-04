@@ -4,6 +4,7 @@ import pytesseract
 import io
 import cv2
 import numpy as np
+import logging
 
 app = Flask(__name__)
 
@@ -36,14 +37,41 @@ def ocr_image():
         # Convert the image to PIL format for pytesseract
         pil_image = Image.fromarray(thresh_image)
 
-        # Step 4: Perform OCR using pytesseract
-        extracted_text = pytesseract.image_to_string(pil_image)
+#         # Step 4: Detect the orientation of the image using Tesseract's OSD
+#         osd = pytesseract.image_to_osd(pil_image)
+#         rotation_angle = int(re.search(r'(?<=Rotate: )\d+', osd).group(0))
+#
+#         # Step 5: If the image is rotated, rotate it back to the correct orientation
+#         if rotation_angle != 0:
+#             # Rotate the image using OpenCV to correct the orientation
+#             if rotation_angle == 90:
+#                 rotated_image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+#             elif rotation_angle == 180:
+#                 rotated_image = cv2.rotate(image, cv2.ROTATE_180)
+#             elif rotation_angle == 270:
+#                 rotated_image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+#             else:
+#                 rotated_image = image  # If no recognizable rotation, keep original image
+#         else:
+#             rotated_image = image  # No rotation needed
+        rotated_image = image
+        # Step 6: Convert the corrected image to grayscale and apply thresholding again
+        gray_rotated_image = cv2.cvtColor(rotated_image, cv2.COLOR_BGR2GRAY)
+        _, final_thresh_image = cv2.threshold(gray_rotated_image, 150, 255, cv2.THRESH_BINARY)
+
+        # Convert the corrected image to PIL format for pytesseract
+        final_pil_image = Image.fromarray(final_thresh_image)
+
+        # Step 7: Perform OCR using pytesseract with the French language configuration
+        custom_config = r'--oem 3 --psm 3 -l fra'
+        extracted_text = pytesseract.image_to_string(final_pil_image, config=custom_config)
 
         return jsonify({'extracted_text': extracted_text})
 
     except Exception as e:
+        logging.error(e)
         return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
