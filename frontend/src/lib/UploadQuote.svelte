@@ -2,7 +2,10 @@
     let file: File | null = null; // Type for the file
     let uploadMessage: string = "";
     let text:string = "";
-
+    let success = false;
+    let loading = false;
+    let imageUrl;
+    let imageLoaded = false;
     // Define the type for the API response
     type ApiResponse = {
         message: string;
@@ -11,10 +14,11 @@
     };
 
     // API URL (replace this with your actual API URL)
-    const apiUrl = 'http://localhost:8081/api/invoice';
+    const apiUrl = 'http://localhost:8090/api/invoice/ml';
 
     // Handle form submission
     async function uploadFile() {
+        loading = true;
         if (!file) {
             uploadMessage = "Please select a file before uploading.";
             return;
@@ -23,24 +27,34 @@
         // Create FormData object to send the file
         const formData = new FormData();
         formData.append('image', file);
-
         try {
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 body: formData
             });
 
-            const data: ApiResponse = await response.json();
-            text = data?.text;
+            // const data: ApiResponse = await response.json();
+            // text = data?.text;
             if (response.ok) {
-                uploadMessage = `File uploaded successfully: ${data.file}`;
+                uploadMessage = `File uploaded successfully !`;
+                const blob = await response.blob();
+                imageUrl = URL.createObjectURL(blob);
+                success = true;
+
             } else {
                 uploadMessage = `Error: ${data.error || 'Failed to upload the file'}`;
             }
         } catch (error) {
             uploadMessage = `Error: ${(error as Error).message}`;
+        } finally {
+            loading = false;
         }
     }
+
+    function handleImageLoad() {
+        imageLoaded = true;
+    }
+    import Zoom from 'svelte-zoom'
 </script>
 
 <style>
@@ -66,10 +80,7 @@
 
     <!-- Upload button -->
     <button on:click="{uploadFile}">Upload</button>
-
-    <!-- Display the message (success or error) -->
-    {#if uploadMessage}
-        <p class:upload-message="{!uploadMessage.startsWith('Error')}">{uploadMessage}</p>
-        <p class="api_response">{text}</p>
-    {/if}
+</div>
+<div class="upload-container">
+    <Zoom src="{imageUrl}" alt="Zoomable image" />
 </div>
